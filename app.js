@@ -14,97 +14,89 @@ const gameBoard = (() => {
             ['', '', '']
         ];
     };
+    const drawBoard = () => {
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach((cell, index) => {
+            cell.addEventListener('click', () => {
+                cell.innerHTML = Game.currentPlayer.symbol;
+                let row = Math.floor(index / 3);
+                let col = index % 3;
+                board[row][col] = Game.currentPlayer.symbol;
+                cell.style.pointerEvents = 'none';
+                Game.remainingSpots--;
+                Game.checkWin();
+              
+                if (Game.winner == false){
+                    if (Game.remainingSpots > 0){
+                        Game.switchPlayer();
+                    } else if (Game.remainingSpots == 0){
+                        Game.tie();
+                    }
+                }
+            })
+        });
+    }
+        
 
-    return { board, resetBoard };
+    return { board, resetBoard, drawBoard };
 })();
 
 // Player Factory
 const Player = (name, symbol) => {
-    const getName = () => name;
-    const getSymbol = () => symbol;
-
-    return { getName, getSymbol };
+    return { name, symbol };
 }
-
-// Display Controller Module
-const DisplayController = (() => {
-    const board = document.querySelector('.board');
-    
-    // display board
-    const displayBoard = () => {
-        const cells = document.querySelectorAll('.cell');
-        gameBoard.board.forEach((row, rowIndex) => {
-            row.forEach((cell, cellIndex) => {
-                cells[(rowIndex * 3) + cellIndex].textContent = cell;
-            });
-        });
-    }
-    return {displayBoard};
-})();
-
-
 
 // Game flow module
 const Game = (() => {
-    DisplayController.displayBoard();
-
     // Alternate between players
-    let player1 = Player('Player 1', 'X');
-    let player2 = Player('Player 2', 'O');
+    const player1 = Player('Player 1', 'X');
+    const player2 = Player('Player 2', 'O');
+
+    // Set current player
     let currentPlayer = player1;
-    let gameStatus = 'playing';
-    const cells = document.querySelectorAll('.cell');
-    const switchPlayer = () => {
-        currentPlayer = currentPlayer === player1 ? player2 : player1;
-    }
-    // Player click X and O
-    const playerClick = () => {
-        console.log("Current Player: " + currentPlayer.getName());
-        cells.forEach(cell => {
-            cell.removeEventListener('click', playerClick);
-            cell.addEventListener('click', () => {
-                if (cell.textContent === '') {
-                    cell.textContent = currentPlayer.getSymbol();
-                    switchPlayer();
-                }
-            });
-        });
+    let winner = false;
+    let remainingSpots = 9;
+
+ 
+    function switchPlayer() {
+        this.currentPlayer === player1 ? this.currentPlayer = player2 : this.currentPlayer = player1;
     };
 
-    const checkWin = () => {
+
+    function checkWin () {
         // Check rows
         for (let i = 0; i < 3; i++) {
             if (gameBoard.board[i][0] === gameBoard.board[i][1] && gameBoard.board[i][0] === gameBoard.board[i][2] && gameBoard.board[i][0] !== '') {
-                return true;
+                this.winner = true;
+                return;
             }
         }
         // Check columns
         for (let i = 0; i < 3; i++) {
             if (gameBoard.board[0][i] === gameBoard.board[1][i] && gameBoard.board[0][i] === gameBoard.board[2][i] && gameBoard.board[0][i] !== '') {
-                return true;
+                this.winner = true;
+                return;
             }
         }
         // Check diagonals
         if (gameBoard.board[0][0] === gameBoard.board[1][1] && gameBoard.board[0][0] === gameBoard.board[2][2] && gameBoard.board[0][0] !== '') {
-            return true;
+            this.winner = true;
+            return;
         }
         if (gameBoard.board[0][2] === gameBoard.board[1][1] && gameBoard.board[0][2] === gameBoard.board[2][0] && gameBoard.board[0][2] !== '') {
-            return true;
+            this.winner = true;
+            return;
         }
-        return false;
-    }
-    const play = () => {
-        playerClick();
-        while (gameStatus === 'playing') {
-            if (checkWin()) {
-                gameStatus = 'win';
-                console.log('Game Over');
-            }
-        }
+    };
+
+    const tie = () => {
+        alert('Tie!');
+        gameBoard.resetBoard();
     }
 
-        
-    return { play };
+   
+    return { checkWin, switchPlayer,tie, currentPlayer, winner, remainingSpots };
 })();
-    
-Game.play();
+
+
+gameBoard.drawBoard();
